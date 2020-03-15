@@ -1,0 +1,34 @@
+Vagrant.configure(2) do |config|
+  config.vm.box = "ubuntu/xenial64"
+  config.vm.network "forwarded_port", guest:80, host:5566, auto_correct: true
+  config.vm.synced_folder ".", "/var/www/html"  
+config.vm.provider "virtualbox" do |vb|
+  vb.memory = "1024"  
+end
+config.vm.provision "shell", inline: <<-SHELL
+  # Packages vom lokalen Server holen
+  # sudo sed -i -e"1i deb {{config.server}}/apt-mirror/mirror/archive.ubuntu.com/ubuntu xenial main restricted" /etc/apt/sources.list 
+  sudo apt-get update
+  sudo apt-get -y install apache2
+
+
+
+  sudo apt-get install apache2-utils
+  sudo touch /etc/apache2/.htpasswd
+  sudo htpasswd -m /etc/apache2/.htpasswd Alp testtesttest testtesttest
+
+  sudo nano /etc/apache2/sites-enabled/default.conf
+<VirtualHost *:80>
+<Location />
+	Deny from all
+	AuthUserFile /etc/apache2/.htpasswd
+	AuthName "Restricted Area"
+	AuthType Basic
+	Satisfy Any
+	require valid-user
+    </Location> 
+</VirtualHost>
+
+
+SHELL
+end
